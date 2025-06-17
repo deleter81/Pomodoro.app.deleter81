@@ -3,17 +3,20 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Pomodoro Timer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#007bff">
     <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json">
+    <title>Pomodoro Timer</title>
 </head>
 
 <body>
-    <div class="container">
+    <main class="container" aria-label="Pomodoro Timer Application">
         <div class="theme-wrapper">
-            <button id="toggleDark" class="theme-toggle">🌙 Dark Mode</button>
+            <button id="toggleDark" class="theme-toggle" aria-label="Toggle Dark Mode">🌙 Dark Mode</button>
         </div>
 
-        <h1>Pomodoro Timer</h1>
+        <h1 aria-label="Pomodoro Timer Title">Pomodoro Timer</h1>
 
         <div class="timer-wrapper">
             <svg class="circle" viewBox="0 0 160 160">
@@ -41,19 +44,28 @@
         </div>
 
         <div class="music-section">
-            <label for="backgroundMusic">🎧 Music:</label>
-            <audio id="backgroundMusic" controls loop>
-                <source src="study-music-181044.mp3" type="audio/mpeg" />
-                Your browser does not support the audio element.
-            </audio>
-            <br />
-            <label for="customMusic">Custom music:</label>
-            <input type="file" id="customMusic" accept="audio/*" />
+            <div class="music-group">
+                <label for="backgroundMusic">🎧 Music:</label>
+                <audio id="backgroundMusic" controls loop>
+                    <source src="study-music-181044.mp3" type="audio/mpeg" />
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+            <div class="music-group">
+                <label for="customMusic">Custom music:</label>
+                <input type="file" id="customMusic" accept="audio/*" />
+            </div>
+            <div class="mute-wrapper">
+                <label for="muteMusic">Mute Music:</label>
+                <input type="checkbox" id="muteMusic" />
+            </div>
         </div>
 
-        <div class="footer">© 2025 made by deleter81</div>
+        <footer class="footer" aria-label="Footer">
+            © 2025 made by deleter81
+        </footer>
 
-        <div id="breakModal" class="modal">
+        <div id="breakModal" class="modal" aria-label="Break Modal">
             <div class="modal-content">
                 <p>Break time!</p>
                 <button id="closeModal">OK</button>
@@ -62,9 +74,18 @@
 
         <audio id="chime" src="focus.mp3" preload="auto"></audio>
         <audio id="alarmSound" src="alarm.mp3" preload="auto"></audio>
-    </div>
+    </main>
 
     <script src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered', reg))
+                    .catch(err => console.error('Service Worker failed', err));
+            });
+        }
+    </script>
 </body>
 
 </html>

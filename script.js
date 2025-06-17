@@ -11,11 +11,13 @@ const alarmSound = document.getElementById("alarmSound");
 const themeToggle = document.getElementById("toggleDark");
 const backgroundMusic = document.getElementById("backgroundMusic");
 const customMusic = document.getElementById("customMusic");
+const muteMusic = document.getElementById("muteMusic");
 
 let timer = null;
 let isRunning = false;
+let isPaused = false;
 let remainingSeconds = 0;
-let currentPhase = "work"; // 'work' або 'break'
+let currentPhase = "work";
 
 const radius = 70;
 const circumference = 2 * Math.PI * radius;
@@ -32,7 +34,6 @@ function updateDisplay(seconds) {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     timerDisplay.textContent = `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-
     const total = (currentPhase === "work" ? workTimeInput.value : breakTimeInput.value) * 60;
     setProgress(1 - seconds / total);
 }
@@ -41,42 +42,53 @@ function startPhase(phase) {
     clearInterval(timer);
     currentPhase = phase;
     isRunning = true;
-
+    isPaused = false;
     const inputTime = phase === "work" ? workTimeInput.value : breakTimeInput.value;
     remainingSeconds = parseInt(inputTime) * 60;
     updateDisplay(remainingSeconds);
-
-    timer = setInterval(() => {
-        remainingSeconds--;
-        updateDisplay(remainingSeconds);
-
-        if (remainingSeconds <= 0) {
-            clearInterval(timer);
-            isRunning = false;
-            chime.play();
-            alarmSound.play();
-
-            if (phase === "work") {
-                modal.style.display = "flex"; // покажи модалку
-            } else {
-                startPhase("work"); // автоматичний перехід до роботи
-            }
-        }
-    }, 1000);
-
+    timer = setInterval(tick, 1000);
     startBtn.disabled = true;
     pauseBtn.disabled = false;
 }
 
+function resumeTimer() {
+    isRunning = true;
+    isPaused = false;
+    timer = setInterval(tick, 1000);
+    startBtn.disabled = true;
+    pauseBtn.disabled = false;
+}
+
+function tick() {
+    remainingSeconds--;
+    updateDisplay(remainingSeconds);
+    if (remainingSeconds <= 0) {
+        clearInterval(timer);
+        isRunning = false;
+        chime.play();
+        alarmSound.play();
+        if (currentPhase === "work") {
+            modal.style.display = "flex";
+        } else {
+            startPhase("work");
+        }
+    }
+}
+
 startBtn.addEventListener("click", () => {
     if (!isRunning) {
-        startPhase("work");
+        if (isPaused) {
+            resumeTimer();
+        } else {
+            startPhase("work");
+        }
     }
 });
 
 pauseBtn.addEventListener("click", () => {
     clearInterval(timer);
     isRunning = false;
+    isPaused = true;
     startBtn.disabled = false;
     pauseBtn.disabled = true;
 });
@@ -84,6 +96,7 @@ pauseBtn.addEventListener("click", () => {
 resetBtn.addEventListener("click", () => {
     clearInterval(timer);
     isRunning = false;
+    isPaused = false;
     currentPhase = "work";
     remainingSeconds = parseInt(workTimeInput.value) * 60;
     updateDisplay(remainingSeconds);
@@ -93,10 +106,9 @@ resetBtn.addEventListener("click", () => {
 
 closeModal.addEventListener("click", () => {
     modal.style.display = "none";
-    startPhase("break"); // запусти перерву
+    startPhase("break");
 });
 
-// Тема
 themeToggle.addEventListener("click", () => {
     document.body.classList.toggle("dark");
     const darkMode = document.body.classList.contains("dark");
@@ -104,18 +116,15 @@ themeToggle.addEventListener("click", () => {
     localStorage.setItem("darkMode", darkMode);
 });
 
-// Завантаження
 window.addEventListener("load", () => {
     const savedMode = localStorage.getItem("darkMode") === "true";
     document.body.classList.toggle("dark", savedMode);
     themeToggle.textContent = savedMode ? "☀️ Light Mode" : "🌙 Dark Mode";
-
     currentPhase = "work";
     remainingSeconds = parseInt(workTimeInput.value) * 60;
     updateDisplay(remainingSeconds);
 });
 
-// Музика
 customMusic.addEventListener("change", (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -123,4 +132,11 @@ customMusic.addEventListener("change", (event) => {
         backgroundMusic.src = url;
         backgroundMusic.play();
     }
+});
+
+muteMusic.addEventListener("change", () => {
+    const muted = muteMusic.checked;
+    backgroundMusic.muted = muted;
+    chime.muted = muted;
+    alarmSound.muted = muted;
 });
